@@ -1,0 +1,50 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch();
+ const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto('http://localhost:5174');
+ await page.screenshot({path:'artifacts/mobile-premium-inicio.png'});
+ await page.evaluate(()=>window.scrollTo(0,document.querySelector('.option-picker').getBoundingClientRect().top+scrollY-335));
+ await page.getByRole('button',{name:'Carnes',exact:true}).click();
+ await page.getByRole('button',{name:'Adicionar Pepperoni',exact:true}).click();
+ await page.waitForTimeout(300);
+ const preview=await page.locator('.food-stage').boundingBox();
+ assert.ok(preview.y>=60&&preview.y<120,`Preview must stay visible: ${JSON.stringify(preview)}`);
+ const action=await page.getByRole('button',{name:'Adicionar à sacola',exact:true}).boundingBox();
+ assert.ok(action.y+action.height<=844&&action.height>=48);
+ assert.equal(await page.getByLabel('Quantidade de Pepperoni',{exact:true}).textContent(),'1');
+ await page.screenshot({path:'artifacts/mobile-premium-pizza.png'});
+ await page.getByRole('button',{name:'Adicionar à sacola',exact:true}).click();
+ await page.getByRole('tab',{name:'Hambúrguer',exact:true}).click();
+ await page.getByRole('button',{name:'Extras',exact:true}).click();
+ await page.getByRole('button',{name:'Adicionar Bacon',exact:true}).click();
+ await page.getByRole('button',{name:'Adicionar à sacola',exact:true}).click();
+ await page.getByRole('tab',{name:'Sushi',exact:true}).click();
+ await page.getByRole('button',{name:/Temaki/}).click();
+ await page.getByRole('button',{name:'Complementos',exact:true}).click();
+ assert.equal(await page.getByLabel('Quantidade de Cream cheese',{exact:true}).textContent(),'1');
+ await page.waitForTimeout(300);
+ await page.screenshot({path:'artifacts/mobile-premium-temaki.png'});
+ await page.getByRole('button',{name:'Adicionar à sacola',exact:true}).click();
+ await page.getByRole('button',{name:'Sua sacola',exact:true}).click();
+ assert.equal(await page.locator('.cart-item').count(),3);
+ await page.screenshot({path:'artifacts/mobile-premium-sacola.png'});
+ await page.getByRole('button',{name:'Editar',exact:true}).last().click();
+ await page.getByRole('button',{name:'Salvar montagem',exact:true}).click();
+ await page.getByRole('button',{name:'Sua sacola',exact:true}).click();
+ assert.equal(await page.locator('.cart-item').count(),3);
+ await page.getByRole('button',{name:'Concluir demonstração',exact:false}).click();
+ await page.getByText('Nenhum pedido foi enviado e nenhum pagamento foi realizado.',{exact:true}).waitFor();
+ await page.keyboard.press('Escape');
+ for(const [width,height]of [[320,740],[360,800],[430,932],[760,1024],[768,1024],[844,390],[1440,1000]]){
+  await page.setViewportSize({width,height});
+  await page.getByRole('tab',{name:'Pizza',exact:true}).click();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`Horizontal overflow at ${width}x${height}`);
+  if(width<=760){const touch=await page.locator('.stepper button').first().boundingBox();assert.ok(touch.width>=44&&touch.height>=44)}
+ }
+ assert.deepEqual(errors,[]);
+ console.log('PASS: fluxo touch nas 3 categorias, preview fixo, preço e botão acessíveis, grupos, edição, conclusão e 7 tamanhos de tela.');
+ await browser.close();
+})().catch(error=>{console.error(error);process.exit(1)});

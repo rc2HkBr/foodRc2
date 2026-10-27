@@ -22,3 +22,7 @@ O temaki usa recheio picado em volume, preenchendo a abertura do cone. Com cream
 ## Publicação
 
 `vercel.json` configura o build Vite (`npm run build`) e a pasta estática `dist`. O projeto não precisa de variáveis de ambiente ou credenciais de serviços para funcionar.
+
+## Experiência mobile
+
+No celular, a prévia do alimento acompanha as escolhas. Os ingredientes são organizados em grupos com contadores de seleção e a barra de preço e inclusão fica ao alcance do polegar. A sacola usa um painel próprio com rolagem interna, respeitando as áreas seguras do aparelho. `npm run test:mobile` percorre montagem, grupos, edição e conclusão com emulação de toque, além de conferir sete tamanhos de tela. Isso não substitui testes em aparelhos físicos.
