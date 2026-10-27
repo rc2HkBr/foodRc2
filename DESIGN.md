@@ -1,0 +1,2 @@
+# Monte & Peça
+Uma mesa de cozinha editorial e acolhedora. Creme #f7f3eb, terracota #a63e29, oliva #46543b e tinta #302a24. Tipografia serifada expressiva nos títulos e sans-serif nos controles. Montagem ocupa o centro da experiência; espaço generoso e divisórias delicadas. Layout de duas colunas no desktop e uma coluna no celular. Controles de pelo menos 44px. Movimento curto com entrada e saída de camadas, respeitando movimento reduzido. Imagem original gerada para a base e ingredientes vetoriais próprios.
