@@ -1,0 +1,44 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch();
+ for(const width of [1440,390,320]){
+  const page=await browser.newPage({viewport:{width,height:width===1440?1000:844}});
+  page.setDefaultTimeout(10000);console.log('checkout',width);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(process.argv[2]||'http://localhost:5174');
+  await page.getByRole('button',{name:'Adicionar à sacola',exact:true}).click();
+  await page.getByRole('button',{name:'Sua sacola',exact:true}).click();
+  await page.getByRole('button',{name:'Continuar para o checkout',exact:false}).click();
+  console.log('review',width);await page.getByRole('button',{name:'Revisar minha criação',exact:false}).click();
+  assert.equal(await page.getByLabel('Seu nome',{exact:true}).getAttribute('aria-invalid'),'true');
+  await page.getByLabel('Seu nome',{exact:true}).fill('Maria Apresentação');
+  await page.getByLabel('Celular com DDD',{exact:true}).fill('11999999999');
+  for(const [name,value]of [['CEP','01001-000'],['Rua ou avenida','Praça da Sé'],['Número','10'],['Bairro','Sé'],['Cidade','São Paulo']])await page.getByLabel(name,{exact:true}).fill(value);
+  await page.getByLabel('UF',{exact:true}).selectOption('SP');
+  await page.getByLabel('Observações',{exact:false}).fill('Tocar a campainha.');
+  await page.getByRole('button',{name:'Pix Pagamento digital',exact:false}).click();
+  console.log('review',width);await page.getByRole('button',{name:'Revisar minha criação',exact:false}).click();
+  await page.getByRole('heading',{name:'Tudo do seu jeito.'}).waitFor();
+  assert.equal(await page.getByText('Pix',{exact:true}).count(),1);
+  assert.equal(await page.locator('.order-grand-total').textContent(),'TotalR$ 44,90');
+  await page.screenshot({path:`artifacts/checkout-revisao-${width}.png`});
+  await page.getByRole('button',{name:'Ajustar dados',exact:false}).click();
+  await page.getByRole('button',{name:/^Retirada/}).click();
+  await page.getByRole('button',{name:/^Pagar na retirada/}).click();
+  await page.getByRole('button',{name:'Dinheiro',exact:true}).click();
+  assert.equal(await page.locator('input[name=street]').count(),0);
+  await page.screenshot({path:`artifacts/checkout-dados-${width}.png`});
+  console.log('review',width);await page.getByRole('button',{name:'Revisar minha criação',exact:false}).click();
+  await page.getByText('Dinheiro na retirada',{exact:true}).waitFor();
+  assert.equal(await page.locator('.order-grand-total').textContent(),'TotalR$ 38,00');
+  await page.getByRole('button',{name:'Concluir demonstração',exact:false}).click();
+  await page.getByText('Nenhum pedido foi enviado e nenhum pagamento foi realizado.',{exact:true}).waitFor();
+  await page.screenshot({path:`artifacts/checkout-conclusao-${width}.png`});
+  assert.equal(await page.evaluate(()=>Object.values(localStorage).some(value=>value.includes('Maria Apresentação')||value.includes('11999999999'))),false);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  assert.deepEqual(errors,[]);
+  await page.close();
+ }
+ console.log('PASS: checkout desktop e mobile, validação, Pix, pagamento na entrega/retirada, taxas, revisão, conclusão e dados não persistidos.');
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

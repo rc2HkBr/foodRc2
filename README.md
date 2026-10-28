@@ -32,3 +32,13 @@ Vercel Web Analytics está integrado pelo componente `Analytics` de `@vercel/ana
 ## Experiência mobile
 
 No celular, a prévia do alimento acompanha as escolhas. Os ingredientes são organizados em grupos com contadores de seleção e a barra de preço e inclusão fica ao alcance do polegar. A sacola usa um painel próprio com rolagem interna, respeitando as áreas seguras do aparelho. `npm run test:mobile` percorre montagem, grupos, edição e conclusão com emulação de toque, além de conferir sete tamanhos de tela. Isso não substitui testes em aparelhos físicos.
+
+## Checkout demonstrativo
+
+A sacola leva a um checkout com nome, celular, entrega ou retirada, endereço, observações e escolha entre Pix ou pagamento na entrega/retirada (cartão ou dinheiro). O fluxo valida os dados, permite revisar e voltar para ajustes, e calcula a taxa demonstrativa de entrega em centavos. Retirada é gratuita. A taxa e a identificação da retirada ficam em `src/checkoutModel.ts`.
+
+O Pix é apenas uma escolha de forma de pagamento: não há chave, QR Code, cobrança, confirmação de pagamento ou envio de pedido. Os dados do formulário permanecem somente na memória da página, sem persistência ou transmissão. A sacola continua persistindo apenas as montagens no localStorage.
+
+`npm run test:checkout` verifica entrega, retirada, Pix, cartão/dinheiro, validação, revisão, totais e conclusão em desktop e celulares de 320 e 390 px. Para testar o ambiente publicado: `node tests/checkout.cjs https://foodmenu-rosy.vercel.app/`.
+
+Há um roteiro curto e honesto de apresentação em `docs/roteiro-apresentacao.md`, com um percurso de demonstração e o que deve ser definido para a operação real.

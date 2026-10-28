@@ -35,7 +35,7 @@ const assert=require('node:assert/strict');
  await page.getByRole('button',{name:'Salvar montagem',exact:true}).click();
  await page.getByRole('button',{name:'Sua sacola',exact:true}).click();
  assert.equal(await page.locator('.cart-item').count(),3);
- await page.getByRole('button',{name:'Concluir demonstração',exact:false}).click();
+ await page.getByRole('button',{name:'Continuar para o checkout',exact:false}).click();await page.getByLabel('Seu nome',{exact:true}).fill('Cliente demonstração');await page.getByLabel('Celular com DDD',{exact:true}).fill('11999999999');await page.getByRole('button',{name:/^Retirada/}).click();await page.getByRole('button',{name:'Revisar minha criação',exact:false}).click();await page.getByRole('button',{name:'Concluir demonstração',exact:false}).click();
  await page.getByText('Nenhum pedido foi enviado e nenhum pagamento foi realizado.',{exact:true}).waitFor();
  await page.keyboard.press('Escape');
  for(const [width,height]of [[320,740],[360,800],[430,932],[760,1024],[768,1024],[844,390],[1440,1000]]){
