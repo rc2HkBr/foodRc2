@@ -1,0 +1,21 @@
+.pwa-install-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 15px;border:1px solid #d6b9aa;border-radius:999px;background:#fffaf4;color:var(--accent);font-size:12px;font-weight:700;white-space:nowrap}
+.pwa-install-button svg{flex-shrink:0}
+.pwa-install-button:hover{background:#f8ece4}
+.pwa-help-dialog{width:min(440px,calc(100% - 32px));max-width:none;margin:auto;padding:0;border:1px solid #ded7cb;border-radius:20px;background:#fffcf6;color:#302a24;box-shadow:0 24px 80px #26180f40}
+.pwa-help-dialog::backdrop{background:#28231d70;backdrop-filter:blur(5px)}
+.pwa-help-card{position:relative;padding:32px}
+.pwa-help-card>.icon-button{position:absolute;right:14px;top:12px}
+.pwa-help-card h2{max-width:310px;margin:12px 0;font:400 32px/1.1 Georgia,serif;letter-spacing:-.5px}
+.pwa-help-card p{font-size:14px;line-height:1.75;color:var(--muted)}
+.pwa-share-hint{display:flex;align-items:center;gap:9px;margin-top:20px;padding:13px;border-radius:10px;background:#f1eee4;color:#46543b;font-size:12px;font-weight:600}
+.pwa-share-hint span{margin-left:auto;font-size:21px}
+.burger-photo{filter:drop-shadow(0 4px 4px #49301b0a)}
+.burger-photo .burger-photo-layer{transform-box:fill-box;transform-origin:50% 100%}
+@media(max-width:760px){
+ .site-header nav{gap:9px}
+ .pwa-install-button{width:46px;min-width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;border-color:#e6d8c9;background:#faf7f0}
+ .pwa-install-button span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+ .pwa-help-dialog{position:fixed;inset:auto 12px calc(12px + env(safe-area-inset-bottom,0px));width:auto;margin:0;border-radius:22px}
+ .pwa-help-card{padding:30px 24px 26px}
+}
+@media(prefers-reduced-motion:reduce){.burger-photo .burger-photo-layer,.bun-top{animation:none!important;transition:none!important}}

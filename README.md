@@ -21,7 +21,11 @@ O temaki usa recheio picado em volume, preenchendo a abertura do cone. Com cream
 
 Pizza: P de 25 cm, M de 30 cm e G de 35 cm, com escala visual proporcional. Depois dos ingredientes, é possível escolher inteira ou fatiada em 4, 6 ou 8 fatias. A preferência acompanha o item na sacola e na edição, sem taxa adicional. Catupiry e cheddar são aplicados como fios em trama, com animação de aplicação que respeita movimento reduzido. `node tests/pizza.cjs` verifica tamanhos, corte, cremes, edição e persistência no desktop e celular.
 
-O hambúrguer tem pão brioche liso, carne alta e queijo derretido com dobras. Os recortes novos e os fios de queijo são originais gerados via image_gen, com prompts em `docs/burger-v2-image-prompts.json` e `docs/cheese-image-prompts.json`.
+O hambúrguer tem pão brioche alto, carne grelhada, queijo derretido e bacon em recortes fotorrealistas com proporções preservadas. A prévia usa uma tábua quente inspirada na referência enviada e atualiza as camadas conforme os ingredientes escolhidos. Os recortes e fios de queijo são originais gerados via image_gen, com prompts em `docs/burger-v2-image-prompts.json` e `docs/cheese-image-prompts.json`.
+
+## Aplicativo instalável
+
+O site pode ser instalado pela opção “Instalar app” no navegador ou adicionado à tela inicial no Safari do iPhone. `public/manifest.webmanifest` define nome, ícones e aparência standalone; `public/sw.js` mantém o app shell e recursos visuais já carregados em cache, permitindo reabrir a experiência offline após a primeira visita. A sacola continua salva localmente no dispositivo. A demonstração não envia pedidos nem pagamentos.
 
 ## Publicação
 

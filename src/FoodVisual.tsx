@@ -40,22 +40,33 @@ export function PizzaVisual({config}:{config:Configuration}){
  </svg>;
 }
 
-const burgerOrder=['lettuce','tomato','redOnion','pickle','beef','chicken','cheddar','cheese','bacon','egg','sauce'];
-const burgerHeight:Record<string,number>={sauce:18,lettuce:17,tomato:18,redOnion:10,pickle:11,beef:52,chicken:42,cheddar:18,cheese:22,bacon:22,egg:21};
+const burgerOrder=['sauce','chicken','beef','cheese','cheddar','lettuce','tomato','redOnion','pickle','bacon','egg'];
+const burgerLayerSize:Record<string,{x:number;width:number;height:number;y:number;rise:number}>={
+ sauce:{x:91,width:318,height:72,y:210,rise:22},lettuce:{x:65,width:370,height:104,y:298,rise:26},
+ tomato:{x:84,width:332,height:95,y:299,rise:22},redOnion:{x:84,width:332,height:87,y:291,rise:18},
+ pickle:{x:89,width:322,height:62,y:298,rise:17},chicken:{x:88,width:324,height:99,y:265,rise:42},
+ beef:{x:84,width:332,height:175,y:232,rise:62},cheese:{x:84,width:332,height:131,y:246,rise:36},
+ cheddar:{x:84,width:332,height:86,y:262,rise:28},bacon:{x:88,width:324,height:105,y:204,rise:32},
+ egg:{x:91,width:318,height:101,y:225,rise:32}
+};
 export function BurgerVisual({config}:{config:Configuration}){
  const counts=useVisualCounts(config.ingredients);
  const layers=[...catalog.burger].sort((a,b)=>burgerOrder.indexOf(a.id)-burgerOrder.indexOf(b.id)).flatMap(i=>Array.from({length:counts[i.id]||0},(_,n)=>({...i,key:i.id+n,leaving:n>=(config.ingredients[i.id]||0)})));
- const stackHeight=layers.reduce((height,i)=>height+burgerHeight[i.id],0);
- const compression=Math.min(1,235/Math.max(stackHeight,1));
- let cursor=366;
+ const extraLayers=layers.filter((layer,index)=>layers.findIndex(candidate=>candidate.id===layer.id)!==index).length;
  const bunFilter=config.option==='australiano'?'sepia(.5) saturate(1.35) brightness(.58)':config.option==='tradicional'?'saturate(.65) brightness(1.12)':undefined;
  return <svg viewBox="0 0 500 500" role="img" aria-label="Seu hambúrguer em camadas" className="food-svg burger-photo">
-  <ellipse cx="250" cy="423" rx="164" ry="14" fill="#69503a" opacity=".12"/>
-  <image href="/ingredients/burger-bun-bottom-v2.webp" x="76" y="357" width="348" height="63" preserveAspectRatio="none" style={{filter:bunFilter}}/>
-  {layers.map(i=>{const height=burgerHeight[i.id]*compression;cursor-=height;const y=cursor;return <g key={i.key} className="burger-photo-layer" style={{opacity:i.leaving?0:1,transform:`translateY(${y}px)`}} data-ingredient={i.id}>
-   <image href={`/ingredients/burger-${i.id}${['beef','cheese','sauce'].includes(i.id)?'-v2':''}.webp`} x={i.id==='lettuce'?65:78} y="-7" width={i.id==='lettuce'?370:344} height={height+(i.id==='cheese'?43:17)} preserveAspectRatio="none"/>
+  <defs><filter id="burger-shadow"><feDropShadow dx="0" dy="10" stdDeviation="8" floodColor="#49301b" floodOpacity=".2"/></filter><radialGradient id="burger-board" cx="48%" cy="34%"><stop stopColor="#d5a66d"/><stop offset=".72" stopColor="#b9804c"/><stop offset="1" stopColor="#8c5935"/></radialGradient></defs>
+  <ellipse cx="250" cy="405" rx="211" ry="88" fill="url(#burger-board)" stroke="#875735" strokeWidth="8" filter="url(#burger-shadow)"/>
+  <ellipse cx="250" cy="405" rx="197" ry="74" fill="none" stroke="#e2b77f" strokeWidth="2" opacity=".55"/>
+  <path d="M57 399q71-22 131-7t116 0q63-18 137 4M81 430q69-17 119-5t104 0q59-14 117 2" fill="none" stroke="#774b2d" strokeWidth="2" opacity=".19"/>
+  <ellipse cx="250" cy="435" rx="166" ry="15" fill="#51341f" opacity=".17"/>
+  <image href="/ingredients/burger-bun-bottom-v2.webp" x="76" y="349" width="348" height="122" preserveAspectRatio="none" style={{filter:bunFilter}}/>
+  <g filter="url(#burger-shadow)">
+  {layers.map(i=>{const spec=burgerLayerSize[i.id],duplicate=Number(i.key.slice(i.id.length));const y=spec.y-duplicate*spec.rise;return <g key={i.key} className="burger-photo-layer" style={{opacity:i.leaving?0:1,transform:`translateY(${y}px)`}} data-ingredient={i.id}>
+   <image href={`/ingredients/burger-${i.id}${['beef','cheese','sauce'].includes(i.id)?'-v2':''}.webp`} x={spec.x} y="0" width={spec.width} height={spec.height} preserveAspectRatio="none"/>
   </g>})}
-  <g className="bun-top" style={{transform:`translateY(${366-stackHeight*compression-118}px)`}}><image href="/ingredients/burger-bun-top-v2.webp" x="70" y="0" width="360" height="136" preserveAspectRatio="none" style={{filter:bunFilter}}/></g>
+  <g className="bun-top" style={{transform:`translateY(${Math.max(28,72-extraLayers*10)}px)`}}><image href="/ingredients/burger-bun-top-v2.webp" x="70" y="0" width="360" height="188" preserveAspectRatio="none" style={{filter:bunFilter}}/></g>
+  </g>
  </svg>;
 }
 
