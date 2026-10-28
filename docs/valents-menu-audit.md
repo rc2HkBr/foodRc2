@@ -12,7 +12,7 @@ Foram conferidos no navegador os 71 produtos das 11 categorias e as telas indivi
 - Hossomaki de salmão e uramaki de salmão exigem um dos sete sabores cadastrados.
 - Hossomaki e uramaki de kani têm um grupo opcional com cinco opções e limite de uma escolha.
 - Soda italiana: o texto comercial diz até três sabores, mas o formulário permite uma opção e não a marca como obrigatória. A demonstração segue o formulário: opcional, máximo de um sabor.
-- Produtos fixos não permitem trocas inventadas de ingredientes. Observações e quantidade continuam disponíveis.
+- Itens avulsos sem grupos de personalização observados permanecem fiéis ao cadastro público; observações e quantidade seguem disponíveis. Os combinados agora têm uma opção demonstrativa para trocar sabores dentro do mesmo tipo de peça, preservando contagem e preço base. Essa personalização é novidade do site, não uma função confirmada no cardápio do restaurante; validar as substituições com a loja antes de usar comercialmente.
 
 ## Divergências a confirmar com o restaurante
 

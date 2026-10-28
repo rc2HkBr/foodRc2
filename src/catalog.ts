@@ -1,4 +1,4 @@
-import {getMenuProduct,menuCategories,menuDescription,menuPrice,validateMenu,type MenuCustomization} from './valentsMenu';
+import {getMenuProduct,initialMenu,menuCategories,menuDescription,menuPrice,validateMenu,type MenuCustomization} from './valentsMenu';
 export type Category = 'pizza' | 'burger' | 'sushi';
 export type Ingredient = { id: string; name: string; price: number; max: number; color: string; group: string };
 const ingredient = (id:string,name:string,price:number,color:string,group:string,max=2):Ingredient => ({id,name,price,color,group,max});
@@ -33,7 +33,7 @@ export function validate(c:Configuration):string|null {
  return null;
 }
 export const STORAGE_KEY='monte-e-peca.cart.v1';
-export function loadCart(storage:Pick<Storage,'getItem'>):CartItem[]{try{const raw=JSON.parse(storage.getItem(STORAGE_KEY)||'[]');if(!Array.isArray(raw))return [];const ids=new Set<string>();return raw.filter((i:any)=>{try{if(!i||typeof i.id!=='string'||ids.has(i.id)||!Number.isInteger(i.quantity)||i.quantity<1||i.quantity>99||validate(i.config)!==null)return false;ids.add(i.id);return true}catch{return false}})}catch{return []}}
+export function loadCart(storage:Pick<Storage,'getItem'>):CartItem[]{try{const raw=JSON.parse(storage.getItem(STORAGE_KEY)||'[]');if(!Array.isArray(raw))return [];const ids=new Set<string>();return raw.filter((i:any)=>{try{if(!i||typeof i.id!=='string'||ids.has(i.id)||!Number.isInteger(i.quantity)||i.quantity<1||i.quantity>99)return false;if(i.config?.menu){const defaults=initialMenu(i.config.menu.id);i.config={...i.config,menu:{...i.config.menu,choices:{...defaults.choices,...i.config.menu.choices}}}}if(validate(i.config)!==null)return false;ids.add(i.id);return true}catch{return false}})}catch{return []}}
 export function saveCart(storage:Pick<Storage,'setItem'>,items:CartItem[]){try{storage.setItem(STORAGE_KEY,JSON.stringify(items));return true}catch{return false}}
 export const snapshot=(c:Configuration):Configuration=>structuredClone(c);
 export const total=(items:CartItem[])=>items.reduce((sum,i)=>sum+price(i.config)*i.quantity,0);

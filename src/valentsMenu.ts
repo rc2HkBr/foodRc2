@@ -1,7 +1,7 @@
 export type MenuKind='combo'|'temaki'|'fried-temaki'|'no-rice-temaki'|'ceviche'|'hot'|'sashimi'|'nigiri'|'joy'|'hossomaki'|'uramaki'|'dragon'|'drink'|'beer'|'soda'|'sauce'|'extra';
 export type MenuProduct={id:string;category:string;name:string;price:number;kind:MenuKind;portion?:string;components?:{name:string;count:number}[];groups:string[];note?:string};
 export type MenuCustomization={id:string;choices:Record<string,Record<string,number>>;notes:string};
-export type MenuGroup={id:string;name:string;min:number;max:number;options:{id:string;name:string;price:number}[]};
+export type MenuGroup={id:string;name:string;min:number;max:number;options:{id:string;name:string;price:number}[];componentIndex?:number;originalOption?:string};
 export const menuSource={name:'Valent’s Sushi',url:'https://menu.brendi.com.br/valents-sushi-centro',reviewed:'2026-10-27',automaticSync:false};
 export const menuCategories=[['promos','Combos promocionais'],['combos','Combos incríveis'],['ceviche','Ceviche'],['temaki','Temaki'],['big-small','Bigs Hots · Pequeno'],['big-large','Bigs Hots · Grande'],['portions','Porções'],['soft-drinks','Refrigerantes'],['beer','Cervejas'],['water','Soda italiana e águas'],['sauces','Molhos extra']]as const;
 const option=(id:string,name:string,price=0)=>({id,name,price});
@@ -17,7 +17,27 @@ export const menuGroups:Record<string,MenuGroup>={
  'soda-flavor':{id:'soda-flavor',name:'Sabor da soda',min:0,max:1,options:[option('passion','Maracujá'),option('strawberry','Morango'),option('green-apple','Maçã-verde')]}
 };
 const component=(count:number,name:string)=>({count,name});
-const product=(id:string,category:string,name:string,price:number,kind:MenuKind,portion?:string,groups:string[]=[],components?:MenuProduct['components'],note?:string):MenuProduct=>({id,category,name,price,kind,portion,groups,components,note});
+const comboAlternatives:Record<string,string[]>={
+ uramaki:['Uramaki de salmão','Uramaki de kani','Uramaki de kani com maracujá','Uramaki de kani com alho-poró','Uramaki de kani com cebola crispy','Uramaki de skin','Uramaki de skin com alho-poró','Uramaki de skin com cebolinha','Uramaki de skin com cebola crispy','Uramaki de skin com maracujá','Uramaki de skin com Doritos','Uramaki de tilápia','Uramaki de salmão com alho-poró'],
+ hossomaki:['Hossomaki de salmão','Hossomaki de salmão com cream cheese','Hossomaki de tilápia','Hossomaki de tilápia com cream cheese','Hossomaki skin','Hossomaki skin com geleia de maracujá','Hossomaki de kani'],
+ hot:['Hot Philadelphia','Hot Philadelphia com geleia de pimenta','Hot skin','Hot banana','Hot banana com chocolate','Hot banana com creme de avelã'],
+ joy:['Joy de salmão com cream cheese','Joy de salmão, cream cheese e alho-poró','Joy de salmão com cream cheese e pimenta-biquinho','Joy de salmão, cream cheese e maracujá','Joy tradicional com cream cheese'],
+ niguiri:['Niguiri de salmão','Niguiri skin com limão e cream cheese'],
+ dragon:['Dragon de kani','Dragon de skin'],
+ sashimi:['Sashimi de salmão','Sashimi de salmão maçaricado','Sashimi de salmão com lemon pepper']
+};
+function comboPieceType(name:string){const text=name.toLowerCase();return (['uramaki','hossomaki','hot','joy','niguiri','dragon','sashimi'] as const).find(type=>text.includes(type))}
+function comboGroupId(id:string,index:number){return `combo-piece-${id}-${index}`}
+const product=(id:string,category:string,name:string,price:number,kind:MenuKind,portion?:string,groups:string[]=[],components?:MenuProduct['components'],note?:string):MenuProduct=>{
+ const menuGroupsForProduct=[...groups];
+ if(kind==='combo'&&id!=='combo-two-temakis'&&components)components.forEach((piece,index)=>{
+  const type=comboPieceType(piece.name);if(!type)return;
+  const groupId=comboGroupId(id,index),otherChoices=comboAlternatives[type].filter(choice=>choice.toLowerCase()!==piece.name.toLowerCase());
+  menuGroups[groupId]={id:groupId,name:`Escolha o sabor das ${piece.count} peças de ${type[0].toUpperCase()+type.slice(1)}`,min:piece.count,max:piece.count,componentIndex:index,originalOption:'as-listed',options:[option('as-listed',piece.name),...otherChoices.map((choice,n)=>option(`choice-${n}`,choice))]};
+  menuGroupsForProduct.push(groupId);
+ });
+ return {id,category,name,price,kind,portion,groups:menuGroupsForProduct,components,note};
+};
 export const valentsProducts:MenuProduct[]=[
  product('combo-individual','promos','Combo Individual',3990,'combo',undefined,[],[component(4,'Uramaki de salmão'),component(4,'Uramaki de skin com alho-poró'),component(2,'Uramaki de tilápia'),component(3,'Dragon'),component(3,'Sashimi'),component(2,'Joy com pimenta-biquinho'),component(3,'Hot Philadelphia')],'A referência informa uma medida inconsistente. Quantidade a confirmar.'),
  product('combo-individual-especial','promos','Combo Individual Especial',3290,'combo','22 unidades',['cola-extra'],[component(4,'Uramaki de salmão'),component(4,'Uramaki de kani com maracujá'),component(4,'Uramaki de kani com alho-poró'),component(5,'Hot skin'),component(5,'Hot banana com creme de avelã')]),
@@ -50,7 +70,20 @@ export const valentsProducts:MenuProduct[]=[
  product('tare-extra','sauces','Molho Tarê (Teriaky)',200,'sauce','1 unidade'),product('shoyu-extra','sauces','Molho Shoyu',200,'sauce','1 unidade'),product('additional','sauces','ADICIONAL',100,'extra',undefined,[],undefined,'Adicional sem descrição na referência.')
 ];
 export function getMenuProduct(id:string){return valentsProducts.find(product=>product.id===id)}
-export const initialMenu=(id:string):MenuCustomization=>({id,choices:{},notes:''});
+export const initialMenu=(id:string):MenuCustomization=>{
+ const item=getMenuProduct(id);if(!item)return {id,choices:{},notes:''};
+ const choices:MenuCustomization['choices']={};
+ for(const groupId of item.groups){const group=menuGroups[groupId];if(group.componentIndex!==undefined&&group.originalOption){const count=item.components?.[group.componentIndex]?.count||0;choices[groupId]={[group.originalOption]:count}}}
+ return {id,choices,notes:''};
+};
+export function comboComponents(menu:MenuCustomization){
+ const item=getMenuProduct(menu.id);if(!item?.components)return [];
+ return item.components.flatMap((piece,index)=>{
+  const groupId=comboGroupId(item.id,index),group=menuGroups[groupId];if(!group)return [piece];
+  const choices=group.options.filter(choice=>(menu.choices[groupId]?.[choice.id]||0)>0).map(choice=>({name:choice.name,count:menu.choices[groupId][choice.id]}));
+  return choices.length?choices:[piece];
+ });
+}
 export function validateMenu(menu:MenuCustomization):string|null{
  if(!menu||typeof menu!=='object'||typeof menu.id!=='string')return 'Produto inválido.';
  const item=getMenuProduct(menu.id);if(!item)return 'Produto não encontrado.';
@@ -63,5 +96,5 @@ export function validateMenu(menu:MenuCustomization):string|null{
  return null;
 }
 export function menuPrice(menu:MenuCustomization){const item=getMenuProduct(menu.id)!;return item.price+item.groups.reduce((sum,id)=>sum+menuGroups[id].options.reduce((subtotal,option)=>subtotal+option.price*(menu.choices[id]?.[option.id]||0),0),0)}
-export function menuDescription(menu:MenuCustomization){const item=getMenuProduct(menu.id)!;const selected=item.groups.flatMap(id=>menuGroups[id].options.filter(option=>menu.choices[id]?.[option.id]).map(option=>`${menu.choices[id][option.id]>1?`${menu.choices[id][option.id]}× `:''}${option.name}`));return [item.portion,...selected,menu.notes?`Obs.: ${menu.notes}`:''].filter(Boolean).join(' · ')||item.name}
+export function menuDescription(menu:MenuCustomization){const item=getMenuProduct(menu.id)!;const selected=item.groups.filter(id=>menuGroups[id].componentIndex===undefined).flatMap(id=>menuGroups[id].options.filter(option=>menu.choices[id]?.[option.id]).map(option=>`${menu.choices[id][option.id]>1?`${menu.choices[id][option.id]}× `:''}${option.name}`));const composition=comboComponents(menu).map(piece=>`${piece.count}× ${piece.name}`);return [item.portion,...(item.kind==='combo'?composition:[]),...selected,menu.notes?`Obs.: ${menu.notes}`:''].filter(Boolean).join(' · ')||item.name}
 export function menuIngredientText(item:MenuProduct){return item.components?item.components.map(component=>`${component.count}× ${component.name}`).join(' · '):item.name}
