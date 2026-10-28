@@ -19,9 +19,15 @@ Os prompts ficam em `docs/food-image-prompts.json`; o manifesto local de fontes 
 
 O temaki usa recheio picado em volume, preenchendo a abertura do cone. Com cream cheese, troca para um recorte próprio da mistura cremosa; cebolinha só aparece quando selecionada. As montagens de cada categoria permanecem enquanto a página estiver aberta. O carrinho persiste no navegador; falhas geram aviso. A conclusão mantém a sacola e informa que nada foi enviado ou cobrado.
 
+Pizza: P de 25 cm, M de 30 cm e G de 35 cm, com escala visual proporcional. Depois dos ingredientes, é possível escolher inteira ou fatiada em 4, 6 ou 8 fatias. A preferência acompanha o item na sacola e na edição, sem taxa adicional. Catupiry e cheddar são aplicados como fios em trama, com animação de aplicação que respeita movimento reduzido. `node tests/pizza.cjs` verifica tamanhos, corte, cremes, edição e persistência no desktop e celular.
+
+O hambúrguer tem pão brioche liso, carne alta e queijo derretido com dobras. Os recortes novos e os fios de queijo são originais gerados via image_gen, com prompts em `docs/burger-v2-image-prompts.json` e `docs/cheese-image-prompts.json`.
+
 ## Publicação
 
 `vercel.json` configura o build Vite (`npm run build`) e a pasta estática `dist`. O projeto não precisa de variáveis de ambiente ou credenciais de serviços para funcionar.
+
+Vercel Web Analytics está integrado pelo componente `Analytics` de `@vercel/analytics/react`, compatível com Vite. A coleta no ambiente publicado depende da disponibilidade do Web Analytics no projeto Vercel.
 
 ## Experiência mobile
 

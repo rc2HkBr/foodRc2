@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { Configuration } from './catalog';
-import { catalog } from './catalog';
+import { catalog, pizzaSize, store } from './catalog';
 import { toppingAsset, toppingCount, toppingPosition } from './pizzaToppings';
 import { TemakiFilling } from './TemakiFilling';
+import { PipedCheese } from './PipedCheese';
 
 function useVisualCounts(counts:Record<string,number>){
  const [retained,setRetained]=useState(counts);
@@ -16,20 +17,31 @@ function useVisualCounts(counts:Record<string,number>){
 
 export function PizzaVisual({config}:{config:Configuration}){
  const counts=useVisualCounts(config.ingredients);
- const order=['mozzarella','cheddar','chicken','calabresa','pepperoni','bacon','onion','corn','olive','tomato','catupiry','basil'];
- return <svg viewBox="0 0 500 500" role="img" aria-label="Sua pizza vista de cima" className="food-svg pizza-art">
+ const size=pizzaSize(config.option);
+ const scale=size.diameter/Math.max(...Object.values(store.options.pizza).map(option=>option.diameter));
+ const order=['mozzarella','chicken','calabresa','pepperoni','bacon','onion','corn','olive','tomato','catupiry','cheddar','basil'];
+ return <svg viewBox="0 0 500 500" role="img" aria-label={`Sua pizza de ${size.diameter} cm, ${config.sliced?`fatiada em ${size.slices} fatias`:'inteira, sem cortes'}`} className="food-svg pizza-art" data-pizza-size={config.option}>
   <defs><filter id="pizza-shadow"><feDropShadow dx="0" dy="12" stdDeviation="10" floodOpacity=".18"/></filter></defs>
+  <g className="pizza-size" transform={`translate(250 250) scale(${scale}) translate(-250 -250)`}>
   <image href="/pizza-base.png" x="26" y="26" width="448" height="448" filter="url(#pizza-shadow)"/>
   {order.map(id=><g key={id} className={`ingredient-layer ${config.ingredients[id]?'active':''}`} data-ingredient={id}>
-   {Array.from({length:toppingCount(id,counts[id]||0)},(_,n)=>{const {x,y,angle,size}=toppingPosition(id,n);return <g key={n} style={{opacity:n<toppingCount(id,config.ingredients[id]||0)?1:0,transition:'opacity .15s'}}>
+   {id==='catupiry'||id==='cheddar'?<PipedCheese kind={id} quantity={counts[id]||0} visibleQuantity={config.ingredients[id]||0}/>:Array.from({length:toppingCount(id,counts[id]||0)},(_,n)=>{const {x,y,angle,size}=toppingPosition(id,n);return <g key={n} style={{opacity:n<toppingCount(id,config.ingredients[id]||0)?1:0,transition:'opacity .15s'}}>
     <g transform={`translate(${x} ${y}) rotate(${angle})`} className="topping"><g><image href={toppingAsset(id)} x={-size/2} y={-size/2} width={size} height={size} className="photo-topping" opacity={id==='mozzarella'&&config.ingredients[id]===1?.92:1}/></g></g>
    </g>})}
   </g>)}
+  {config.sliced?<g className="pizza-cuts" data-pizza-cuts={size.slices} aria-hidden="true">
+   {Array.from({length:size.slices},(_,index)=>{
+    const angle=index*Math.PI*2/size.slices-Math.PI/2;
+    const path=`M250 250L${250+Math.cos(angle)*204} ${250+Math.sin(angle)*204}`;
+    return <g key={index}><path d={path} stroke="#663421" strokeWidth="1.3" strokeLinecap="round" opacity=".4"/><path d={path} stroke="#f2ce97" strokeWidth=".5" opacity=".35"/></g>;
+   })}
+  </g>:null}
+  </g>
  </svg>;
 }
 
-const burgerOrder=['sauce','lettuce','tomato','redOnion','pickle','beef','chicken','cheddar','cheese','bacon','egg'];
-const burgerHeight:Record<string,number>={sauce:7,lettuce:17,tomato:18,redOnion:10,pickle:11,beef:35,chicken:36,cheddar:14,cheese:13,bacon:18,egg:21};
+const burgerOrder=['lettuce','tomato','redOnion','pickle','beef','chicken','cheddar','cheese','bacon','egg','sauce'];
+const burgerHeight:Record<string,number>={sauce:18,lettuce:17,tomato:18,redOnion:10,pickle:11,beef:52,chicken:42,cheddar:18,cheese:22,bacon:22,egg:21};
 export function BurgerVisual({config}:{config:Configuration}){
  const counts=useVisualCounts(config.ingredients);
  const layers=[...catalog.burger].sort((a,b)=>burgerOrder.indexOf(a.id)-burgerOrder.indexOf(b.id)).flatMap(i=>Array.from({length:counts[i.id]||0},(_,n)=>({...i,key:i.id+n,leaving:n>=(config.ingredients[i.id]||0)})));
@@ -38,12 +50,12 @@ export function BurgerVisual({config}:{config:Configuration}){
  let cursor=366;
  const bunFilter=config.option==='australiano'?'sepia(.5) saturate(1.35) brightness(.58)':config.option==='tradicional'?'saturate(.65) brightness(1.12)':undefined;
  return <svg viewBox="0 0 500 500" role="img" aria-label="Seu hambúrguer em camadas" className="food-svg burger-photo">
-  <ellipse cx="250" cy="409" rx="164" ry="18" fill="#69503a" opacity=".12"/>
-  <image href="/ingredients/burger-bun-bottom.webp" x="76" y="357" width="348" height="53" preserveAspectRatio="none" style={{filter:bunFilter}}/>
+  <ellipse cx="250" cy="423" rx="164" ry="14" fill="#69503a" opacity=".12"/>
+  <image href="/ingredients/burger-bun-bottom-v2.webp" x="76" y="357" width="348" height="63" preserveAspectRatio="none" style={{filter:bunFilter}}/>
   {layers.map(i=>{const height=burgerHeight[i.id]*compression;cursor-=height;const y=cursor;return <g key={i.key} className="burger-photo-layer" style={{opacity:i.leaving?0:1,transform:`translateY(${y}px)`}} data-ingredient={i.id}>
-   <image href={`/ingredients/burger-${i.id}.webp`} x={i.id==='lettuce'?65:78} y="-7" width={i.id==='lettuce'?370:344} height={height+17} preserveAspectRatio="none"/>
+   <image href={`/ingredients/burger-${i.id}${['beef','cheese','sauce'].includes(i.id)?'-v2':''}.webp`} x={i.id==='lettuce'?65:78} y="-7" width={i.id==='lettuce'?370:344} height={height+(i.id==='cheese'?43:17)} preserveAspectRatio="none"/>
   </g>})}
-  <g className="bun-top" style={{transform:`translateY(${366-stackHeight*compression-94}px)`}}><image href="/ingredients/burger-bun-top.webp" x="70" y="0" width="360" height="112" preserveAspectRatio="none" style={{filter:bunFilter}}/></g>
+  <g className="bun-top" style={{transform:`translateY(${366-stackHeight*compression-118}px)`}}><image href="/ingredients/burger-bun-top-v2.webp" x="70" y="0" width="360" height="136" preserveAspectRatio="none" style={{filter:bunFilter}}/></g>
  </svg>;
 }
 
