@@ -1,7 +1,7 @@
 export type MenuKind='combo'|'temaki'|'fried-temaki'|'no-rice-temaki'|'ceviche'|'hot'|'sashimi'|'nigiri'|'joy'|'hossomaki'|'uramaki'|'dragon'|'drink'|'beer'|'soda'|'sauce'|'extra';
 export type MenuProduct={id:string;category:string;name:string;price:number;kind:MenuKind;portion?:string;components?:{name:string;count:number}[];groups:string[];note?:string};
 export type MenuCustomization={id:string;choices:Record<string,Record<string,number>>;notes:string};
-export type MenuGroup={id:string;name:string;min:number;max:number;options:{id:string;name:string;price:number}[];componentIndex?:number;originalOption?:string};
+export type MenuGroup={id:string;name:string;min:number;max:number;options:{id:string;name:string;price:number}[];componentIndex?:number;portionStyle?:boolean;originalOption?:string};
 export const menuSource={name:'Valent’s Sushi',url:'https://menu.brendi.com.br/valents-sushi-centro',reviewed:'2026-10-27',automaticSync:false};
 export const menuCategories=[['promos','Combos promocionais'],['combos','Combos incríveis'],['ceviche','Ceviche'],['temaki','Temaki'],['big-small','Bigs Hots · Pequeno'],['big-large','Bigs Hots · Grande'],['portions','Porções'],['soft-drinks','Refrigerantes'],['beer','Cervejas'],['water','Soda italiana e águas'],['sauces','Molhos extra']]as const;
 const option=(id:string,name:string,price=0)=>({id,name,price});
@@ -26,6 +26,21 @@ const comboAlternatives:Record<string,string[]>={
  dragon:['Dragon de kani','Dragon de skin'],
  sashimi:['Sashimi de salmão','Sashimi de salmão maçaricado','Sashimi de salmão com lemon pepper']
 };
+const portionAlternatives:Partial<Record<MenuKind,string[]>>={
+ ceviche:['Ceviche Tilápia','Ceviche Tilápia e Salmão','Ceviche Salmão com Pimenta Biquinho','Ceviche Salmão'],
+ hot:['Hot Philadelphia','Hot Philadelphia com Geleia de Pimenta','Hot Skin','Hot de Banana com Chocolate','Hot de Banana com Creme de Avelã'],
+ sashimi:['Sashimis de Salmão','Sashimis de Salmão Maçaricado','Sashimis de Salmão com Lemon Pepper'],
+ nigiri:['Nigiris Salmão','Nigiris Salmão Maçaricado','Nigiris Skin com Limão, Cream Cheese'],
+ joy:['Joys Salmão com Cream Cheese','Joys Salmão com Cream Cheese e Pimenta Biquinho','Joys Salmão Tropical','Joys Salmão Macerado com Cream Cheese e Geleia de Pimenta'],
+ hossomaki:['Hossomakis Salmão','Hossomakis Kani','Hossomakis Skin'],
+ uramaki:['Uramakis Salmão','Uramakis Kani','Uramakis Skin'],
+ dragon:['Dragons Kani, Cream Cheese e Salmão','Dragons Skin, Cream Cheese e Salmão']
+};
+const bigHotChoices={
+ 'big-small':['Big hot Salmão, Cream Cheese e Gotas de Pimenta Chinesa (pequeno)','Big hot Salmão, Cream Cheese e Cebolinha (pequeno)','Big hot Salmão, Cream Cheese e Skin (pequeno)','Big hot Salmão com Geleia de Pimenta (pequeno)'],
+ 'big-large':['Big hot Salmão, Cream Cheese e Cebolinha','Big hot Salmão, Cream Cheese e Gotas de Pimenta Chinesa','Big hot Salmão com Geleia de Pimenta','Big hot Salmão, Cream Cheese e Skin','Big hot Salmão Grelhado Picante']
+} as const;
+const cevichePrices:Record<string,number>={'Ceviche Tilápia':3790,'Ceviche Tilápia e Salmão':4990,'Ceviche Salmão com Pimenta Biquinho':5990,'Ceviche Salmão':5990};
 function comboPieceType(name:string){const text=name.toLowerCase();return (['uramaki','hossomaki','hot','joy','niguiri','dragon','sashimi'] as const).find(type=>text.includes(type))}
 function comboGroupId(id:string,index:number){return `combo-piece-${id}-${index}`}
 const product=(id:string,category:string,name:string,price:number,kind:MenuKind,portion?:string,groups:string[]=[],components?:MenuProduct['components'],note?:string):MenuProduct=>{
@@ -36,6 +51,8 @@ const product=(id:string,category:string,name:string,price:number,kind:MenuKind,
   menuGroups[groupId]={id:groupId,name:`Escolha o sabor das ${piece.count} peças de ${type[0].toUpperCase()+type.slice(1)}`,min:piece.count,max:piece.count,componentIndex:index,originalOption:'as-listed',options:[option('as-listed',piece.name),...otherChoices.map((choice,n)=>option(`choice-${n}`,choice))]};
   menuGroupsForProduct.push(groupId);
  });
+ const portionChoices=category==='big-small'?bigHotChoices['big-small']:category==='big-large'?bigHotChoices['big-large']:groups.length===0?portionAlternatives[kind]:undefined;
+ if(portionChoices?.length){const groupId=`portion-flavor-${id}`,choices=portionChoices.filter(choice=>choice.toLowerCase()!==name.toLowerCase());menuGroups[groupId]={id:groupId,name:'Mude os ingredientes desta porção',min:1,max:1,portionStyle:true,originalOption:'as-listed',options:[option('as-listed',name),...choices.map((choice,n)=>option(`choice-${n}`,choice,kind==='ceviche'?cevichePrices[choice]-price:0))]};menuGroupsForProduct.push(groupId)}
  return {id,category,name,price,kind,portion,groups:menuGroupsForProduct,components,note};
 };
 export const valentsProducts:MenuProduct[]=[
@@ -73,7 +90,7 @@ export function getMenuProduct(id:string){return valentsProducts.find(product=>p
 export const initialMenu=(id:string):MenuCustomization=>{
  const item=getMenuProduct(id);if(!item)return {id,choices:{},notes:''};
  const choices:MenuCustomization['choices']={};
- for(const groupId of item.groups){const group=menuGroups[groupId];if(group.componentIndex!==undefined&&group.originalOption){const count=item.components?.[group.componentIndex]?.count||0;choices[groupId]={[group.originalOption]:count}}}
+ for(const groupId of item.groups){const group=menuGroups[groupId];if(group.originalOption){const count=group.componentIndex!==undefined?item.components?.[group.componentIndex]?.count||0:1;choices[groupId]={[group.originalOption]:count}}}
  return {id,choices,notes:''};
 };
 export function comboComponents(menu:MenuCustomization){
