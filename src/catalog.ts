@@ -1,3 +1,4 @@
+import {getMenuProduct,menuCategories,menuDescription,menuPrice,validateMenu,type MenuCustomization} from './valentsMenu';
 export type Category = 'pizza' | 'burger' | 'sushi';
 export type Ingredient = { id: string; name: string; price: number; max: number; color: string; group: string };
 const ingredient = (id:string,name:string,price:number,color:string,group:string,max=2):Ingredient => ({id,name,price,color,group,max});
@@ -8,17 +9,19 @@ export const catalog: Record<Category, Ingredient[]> = {
 };
 export const store = { name:'Monte & Peça', logo:'M&P', colors:{accent:'#a63e29',background:'#f7f3eb'}, categories:['pizza','burger','sushi'] as Category[], available:{pizza:true,burger:true,sushi:true}, options:{pizza:{P:{label:'Pequena · 25 cm',price:2400,diameter:25,slices:4},M:{label:'Média · 30 cm',price:3200,diameter:30,slices:6},G:{label:'Grande · 35 cm',price:4000,diameter:35,slices:8}},burger:{brioche:{label:'Brioche',price:600},australiano:{label:'Australiano',price:700},tradicional:{label:'Tradicional',price:500}},sushi:{hossomaki:{label:'Hossomaki',price:1200},uramaki:{label:'Uramaki',price:1600},temaki:{label:'Temaki',price:1400}}}, sushiRules:{hossomaki:{fillings:1,complements:['chive'],sauces:0},uramaki:{fillings:2,complements:['cream','chive','sesame'],sauces:1},temaki:{fillings:2,complements:['cream','chive','sesame'],sauces:1}} };
 export const categoryNames:Record<Category,string>={pizza:'Pizza',burger:'Hambúrguer',sushi:'Sushi'};
-export type Configuration={category:Category; option:string; ingredients:Record<string,number>; portions:number; sliced?:boolean};
+export type Configuration={category:Category; option:string; ingredients:Record<string,number>; portions:number; sliced?:boolean; menu?:MenuCustomization};
 export type CartItem={id:string;config:Configuration;quantity:number};
 export const defaults = ():Record<Category,Configuration> => ({pizza:{category:'pizza',option:'M',ingredients:{mozzarella:1,basil:1},portions:1,sliced:false},burger:{category:'burger',option:'brioche',ingredients:{beef:1,cheese:1,bacon:1,sauce:1},portions:1},sushi:{category:'sushi',option:'uramaki',ingredients:{salmon:1,cream:1,sesame:1},portions:1}});
 export const money=(cents:number)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(cents/100);
 export function options(c:Category):Record<string,{label:string;price:number}>{return store.options[c]}
-export function unitPrice(c:Configuration){return options(c.category)[c.option].price + catalog[c.category].reduce((sum,i)=>sum+i.price*(c.ingredients[i.id]||0),0)}
+export function unitPrice(c:Configuration){if(c.menu)return menuPrice(c.menu);return options(c.category)[c.option].price + catalog[c.category].reduce((sum,i)=>sum+i.price*(c.ingredients[i.id]||0),0)}
 export function price(c:Configuration){return unitPrice(c)*c.portions}
-export function description(c:Configuration){return catalog[c.category].filter(i=>c.ingredients[i.id]).map(i=>`${c.ingredients[i.id]>1?`${c.ingredients[i.id]}× `:''}${i.name}`).join(', ') || 'Sem ingredientes adicionais'}
+export function description(c:Configuration){if(c.menu)return menuDescription(c.menu);return catalog[c.category].filter(i=>c.ingredients[i.id]).map(i=>`${c.ingredients[i.id]>1?`${c.ingredients[i.id]}× `:''}${i.name}`).join(', ') || 'Sem ingredientes adicionais'}
 export function allowed(c:Configuration,i:Ingredient){if(c.category!=='sushi')return true;const rule=store.sushiRules[c.option as keyof typeof store.sushiRules];if(i.group==='Complementos')return (rule.complements as readonly string[]).includes(i.id);return i.group!=='Molhos'||rule.sauces>0}
 export function validate(c:Configuration):string|null {
- if(!c || !store.categories.includes(c.category) || !store.available[c.category] || !options(c.category)[c.option])return 'Produto indisponível.';
+ if(!c || !store.categories.includes(c.category) || !store.available[c.category])return 'Produto indisponível.';
+ if(c.menu){if(c.category!=='sushi'||c.option!=='valents'||c.portions!==1||!c.ingredients||typeof c.ingredients!=='object'||Array.isArray(c.ingredients)||Object.keys(c.ingredients).length||c.sliced!==undefined)return 'Configuração do cardápio inválida.';return validateMenu(c.menu)}
+ if(!options(c.category)[c.option])return 'Produto indisponível.';
  if(!Number.isInteger(c.portions)||c.portions<1||c.portions>10|| (c.category!=='sushi'&&c.portions!==1))return 'Quantidade inválida.';
  if(c.sliced!==undefined&&(c.category!=='pizza'||typeof c.sliced!=='boolean'))return 'Preferência de corte inválida.';
  if(!c.ingredients||typeof c.ingredients!=='object'||Array.isArray(c.ingredients))return 'Ingredientes inválidos.';
@@ -36,3 +39,7 @@ export const total=(items:CartItem[])=>items.reduce((sum,i)=>sum+price(i.config)
 
 export function pizzaSize(option:string){return store.options.pizza[option as keyof typeof store.options.pizza]||store.options.pizza.M}
 export function pizzaCutLabel(config:Configuration){return config.sliced?`Fatiada em ${pizzaSize(config.option).slices} fatias`:'Inteira, sem cortes'}
+
+export function configurationName(c:Configuration){return c.menu?getMenuProduct(c.menu.id)?.name||'Produto':categoryNames[c.category]}
+export function configurationLabel(c:Configuration){return c.menu?getMenuProduct(c.menu.id)?.portion||'Cardápio Valent’s':options(c.category)[c.option].label}
+export function configurationCategory(c:Configuration){return c.menu?menuCategories.find(([id])=>id===getMenuProduct(c.menu!.id)?.category)?.[1]||'Cardápio':categoryNames[c.category]}

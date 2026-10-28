@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.argv[2]||'http://localhost:5174');
  await page.getByRole('tab',{name:'Sushi',exact:true}).click();
- await page.getByRole('button',{name:/Temaki/}).click();
+ await page.locator('.option-picker').getByRole('button',{name:/Temaki/}).click();
  await page.getByRole('button',{name:'Remover Cream cheese',exact:true}).click();
  await page.getByRole('button',{name:'Remover Cebolinha',exact:true}).click();
  assert.equal(await page.locator('.temaki-filling image[href*="sushi-salmon"]').count(),20);

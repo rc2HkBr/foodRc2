@@ -17,7 +17,7 @@ const assert=require('node:assert/strict');
   for(const source of new Set(sources)){const response=await page.request.get(new URL(source,page.url()).href);assert.equal(response.status(),200,source);assert.ok((await response.body()).length>1000,source)}
  }
  for(const type of ['Hossomaki','Temaki']){
-  await page.getByRole('button',{name:new RegExp(type)}).click();
+  await page.locator('.option-picker').getByRole('button',{name:new RegExp(type)}).click();
   await page.waitForTimeout(300);
   await page.locator('.visual-column').screenshot({path:`artifacts/${type.toLowerCase()}-realista.png`});
  }

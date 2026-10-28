@@ -22,7 +22,7 @@ const assert=require('node:assert/strict');
  await page.getByRole('button',{name:'Adicionar Bacon',exact:true}).click();
  await page.getByRole('button',{name:'Adicionar à sacola',exact:true}).click();
  await page.getByRole('tab',{name:'Sushi',exact:true}).click();
- await page.getByRole('button',{name:/Temaki/}).click();
+ await page.locator('.option-picker').getByRole('button',{name:/Temaki/}).click();
  await page.getByRole('button',{name:'Complementos',exact:true}).click();
  assert.equal(await page.getByLabel('Quantidade de Cream cheese',{exact:true}).textContent(),'1');
  await page.waitForTimeout(300);

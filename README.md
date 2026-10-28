@@ -42,3 +42,13 @@ O Pix é apenas uma escolha de forma de pagamento: não há chave, QR Code, cobr
 `npm run test:checkout` verifica entrega, retirada, Pix, cartão/dinheiro, validação, revisão, totais e conclusão em desktop e celulares de 320 e 390 px. Para testar o ambiente publicado: `node tests/checkout.cjs https://foodmenu-rosy.vercel.app/`.
 
 Há um roteiro curto e honesto de apresentação em `docs/roteiro-apresentacao.md`, com um percurso de demonstração e o que deve ser definido para a operação real.
+
+## Cardápio de referência Valents Sushi
+
+O catálogo inclui os 71 produtos das 11 categorias do cardápio público indicado pelo usuário. Há busca, filtros, personalização com os limites observados, composição dos combos, notas do item e edição na mesma sacola. O combo de dois temakis exige os tipos, sabores e bebida; os temakis avulsos e alguns rolinhos têm grupos próprios. Os adicionais usam os preços efetivamente mostrados na referência.
+
+A montagem livre de pizza, hambúrguer e sushi permanece disponível. Itens do catálogo guardam um identificador e escolhas separadas, com preço calculado pelo catálogo em centavos; valores arbitrários não são aceitos no carrinho. As prévias usam recortes próprios para ceviche, sashimi, nigiri, joy, hot, temaki frito e sem arroz, além de ilustrações próprias para bebidas. Não foram copiadas as fotografias nem o logotipo do restaurante. Os prompts ficam em `docs/valents-image-prompts.json`.
+
+É um catálogo demonstrativo de referência, sem vínculo de operação ou sincronização automática com o restaurante. Divergências de quantidade e cadastro foram documentadas em `docs/valents-menu-audit.md`, e são indicadas na seleção quando necessário. O checkout continua sem cobrança nem envio real.
+
+`node tests/valents.cjs` percorre catálogo, escolhas obrigatórias, adicionais, edição, persistência e checkout em desktop e celular. Pode receber a URL publicada como argumento.
